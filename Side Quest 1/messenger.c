@@ -34,7 +34,7 @@ void run_listener() {
 void run_sender(char* dest_ip, char* msg) {
 	int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (sockfd < 0) {
-		printf("Socket creation failed");
+		printf("Socket creation failed\n");
 		return;
 	}
 
@@ -50,7 +50,7 @@ void run_sender(char* dest_ip, char* msg) {
 
 	ssize_t sent_bytes = sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr*)&dest_addr, sizeof(dest_addr));
 	if (sent_bytes < 0) {
-		printf("[-] sendto failed");
+		printf("[-] sendto failed\n");
 	} else {
 		printf("[+] Message sent (%ld bytes)\n", sent_bytes);
 	}
