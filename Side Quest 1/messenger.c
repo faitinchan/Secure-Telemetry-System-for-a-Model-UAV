@@ -33,6 +33,10 @@ void run_listener() {
 
 void run_sender(char* dest_ip, char* msg) {
 	int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (sockfd < 0) {
+		printf("Socket creation failed");
+		return;
+	}
 
 	struct sockaddr_in dest_addr;
 	memset(&dest_addr, 0, sizeof(dest_addr));
