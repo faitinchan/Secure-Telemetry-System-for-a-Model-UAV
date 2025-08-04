@@ -35,7 +35,7 @@ void run_listener() {
 
 	struct sockaddr_in listen_addr;
 	memset(&listen_addr, 0, sizeof(listen_addr));
-	listen_addr.sin_family = AF_DGRAM;
+	listen_addr.sin_family = AF_INET;
 	listen_addr.sin_addr.s_addr = INADDR_ANY;
 	listen_addr.sin_port = htons(12345);
 	
