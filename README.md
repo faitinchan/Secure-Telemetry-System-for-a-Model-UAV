@@ -1,1 +1,1 @@
-# Secure-Telemetry-System-for-a-Model-UAV
+# Secure Telemetry System for a Model UAV
