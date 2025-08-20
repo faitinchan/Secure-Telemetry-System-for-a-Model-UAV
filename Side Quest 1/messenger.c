@@ -1,4 +1,9 @@
+#include <arpa/inet.h>
+#include <netinet/in.h>
 #include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 void run_listener();
 void run_sender(char* dest_ip, char* msg);
@@ -27,5 +32,28 @@ void run_listener() {
 }
 
 void run_sender(char* dest_ip, char* msg) {
-	printf("Sender mode\n");
+	int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (sockfd < 0) {
+		printf("Socket creation failed\n");
+		return;
+	}
+
+	struct sockaddr_in dest_addr;
+	memset(&dest_addr, 0, sizeof(dest_addr));
+	dest_addr.sin_family = AF_INET;
+	dest_addr.sin_port = htons(12345);
+	if (inet_pton(AF_INET, dest_ip, &dest_addr.sin_addr) <= 0) {
+		printf("Invalid IP address format\n");
+		close(sockfd);
+		return;
+	}
+
+	ssize_t sent_bytes = sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr*)&dest_addr, sizeof(dest_addr));
+	if (sent_bytes < 0) {
+		printf("[-] sendto failed\n");
+	} else {
+		printf("[+] Message sent (%ld bytes)\n", sent_bytes);
+	}
+
+	close(sockfd);
 }
