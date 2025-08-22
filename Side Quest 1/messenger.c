@@ -28,7 +28,45 @@ int main(int argc, char* argv[]) {
 }
 
 void run_listener() {
-	printf("Listener mode\n");
+	int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (sockfd < 0) {
+		printf("Socket creation failed\n");
+		return;
+	}
+
+	struct sockaddr_in listen_addr;
+	memset(&listen_addr, 0, sizeof(listen_addr));
+	listen_addr.sin_family = AF_INET;
+	listen_addr.sin_addr.s_addr = INADDR_ANY;
+	listen_addr.sin_port = htons(12345);
+
+	if (bind(sockfd, (struct sockaddr*)&listen_addr, sizeof(listen_addr)) < 0) {
+		printf("Bind failed\n");
+		close(sockfd);
+		return;
+	}
+
+	printf("[*] Listening on port 12345...\n");
+
+	struct sockaddr_in sender_addr;
+	char buffer[1024];
+	socklen_t sender_len = sizeof(sender_addr);
+	while (1) {
+		ssize_t recv_len = recvfrom(sockfd, buffer, sizeof(buffer) - 1, 0, (struct sockaddr*)&sender_addr, &sender_len);
+		if (recv_len < 0) {
+			printf("Receive data on the socket failed\n");
+			break;
+		}
+
+		buffer[recv_len] = '\0';
+
+		char sender_ip[INET_ADDRSTRLEN];
+		inet_ntop(AF_INET, &(sender_addr.sin_addr), sender_ip, INET_ADDRSTRLEN);
+
+		printf("[+] Received from %s: \"%s\"\n", sender_ip, buffer);
+	}
+
+	close(sockfd);
 }
 
 void run_sender(char* dest_ip, char* msg) {
