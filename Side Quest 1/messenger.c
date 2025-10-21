@@ -3,16 +3,22 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <termios.h>
 #include <unistd.h>
 
 void run_listener();
 void run_sender(char* dest_ip, char* msg);
+char* get_password();
 
 int main(int argc, char* argv[]) {
 	if (argc == 1) {
+		char* password = get_password();
+
 		printf("[*] Listening for messages...\n");
 		run_listener();
 	} else if (argc == 3) {
+		char* password = get_password();
+
 		char* dest_ip = argv[1];
 		char* msg = argv[2];
 		printf("[*] Sending message to %s: \"%s\"\n", dest_ip, msg);
@@ -94,4 +100,26 @@ void run_sender(char* dest_ip, char* msg) {
 	}
 
 	close(sockfd);
+}
+
+char* get_password() {
+	static char pwd[21];
+
+	struct termios oldt, newt;
+
+	tcgetattr(STDIN_FILENO, &oldt);
+	newt = oldt;
+
+	newt.c_lflag &= ~(ECHO);
+	tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+
+	printf("Enter password (maximum 20 characters): ");
+	if (fgets(pwd, sizeof(pwd), stdin)) {
+		pwd[strcspn(pwd, "\n")] = '\0';
+	}
+
+	tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+	printf("\n");
+
+	return pwd;
 }
