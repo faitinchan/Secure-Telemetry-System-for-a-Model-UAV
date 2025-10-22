@@ -1,24 +1,17 @@
 #include <arpa/inet.h>
-#include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <termios.h>
 #include <unistd.h>
 
 void run_listener();
 void run_sender(char* dest_ip, char* msg);
-char* get_password();
 
 int main(int argc, char* argv[]) {
 	if (argc == 1) {
-		char* password = get_password();
-
 		printf("[*] Listening for messages...\n");
 		run_listener();
 	} else if (argc == 3) {
-		char* password = get_password();
-
 		char* dest_ip = argv[1];
 		char* msg = argv[2];
 		printf("[*] Sending message to %s: \"%s\"\n", dest_ip, msg);
@@ -45,7 +38,7 @@ void run_listener() {
 	listen_addr.sin_family = AF_INET;
 	listen_addr.sin_addr.s_addr = INADDR_ANY;
 	listen_addr.sin_port = htons(12345);
-
+	
 	if (bind(sockfd, (struct sockaddr*)&listen_addr, sizeof(listen_addr)) < 0) {
 		printf("Bind failed\n");
 		close(sockfd);
@@ -62,7 +55,7 @@ void run_listener() {
 		if (recv_len < 0) {
 			printf("Receive data on the socket failed\n");
 			break;
-		}
+		}	
 
 		buffer[recv_len] = '\0';
 
@@ -98,28 +91,6 @@ void run_sender(char* dest_ip, char* msg) {
 	} else {
 		printf("[+] Message sent (%ld bytes)\n", sent_bytes);
 	}
-
+	
 	close(sockfd);
-}
-
-char* get_password() {
-	static char pwd[21];
-
-	struct termios oldt, newt;
-
-	tcgetattr(STDIN_FILENO, &oldt);
-	newt = oldt;
-
-	newt.c_lflag &= ~(ECHO);
-	tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-
-	printf("Enter password (maximum 20 characters): ");
-	if (fgets(pwd, sizeof(pwd), stdin)) {
-		pwd[strcspn(pwd, "\n")] = '\0';
-	}
-
-	tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-	printf("\n");
-
-	return pwd;
 }
