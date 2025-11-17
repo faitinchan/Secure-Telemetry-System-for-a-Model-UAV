@@ -196,7 +196,7 @@ unsigned char* encrypt_msg(char* pwd, char* msg, size_t* out_len) {
 	unsigned char* en_msg = malloc(total_len);
 
 	size_t i = 0;
-	memcpy(en_msg + i, &clen, sizeof(ciphertext_len));
+	memcpy(en_msg + i, &clen, sizeof(clen));
 	i += sizeof(clen);
 	memcpy(en_msg + i, salt, sizeof(salt));
 	i += sizeof(salt);
