@@ -171,7 +171,7 @@ char* get_password() {
 unsigned char* encrypt_msg(char* pwd, char* msg, size_t* out_len) {
 	if (sodium_init() < 0) {
 		printf("Fail to initialize libsodium.\n");
-		return 1;
+		return NULL;
 	}
 
 	unsigned char key[crypto_aead_chacha20poly1305_KEYBYTES];
@@ -180,7 +180,7 @@ unsigned char* encrypt_msg(char* pwd, char* msg, size_t* out_len) {
 
 	if (crypto_pwhash(key, sizeof(key), pwd, strlen(pwd), salt, crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE, crypto_pwhash_ALG_DEFAULT) != 0) {
 		printf("Out of memory while hashing password.\n");
-		return 1;
+		return NULL;
 	}
 
 	unsigned char ciphertext[sizeof(msg) + crypto_aead_chacha20poly1305_ABYTES];
