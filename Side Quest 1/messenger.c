@@ -184,24 +184,25 @@ unsigned char* encrypt_msg(char* pwd, char* msg, size_t* out_len) {
 	}
 
 	unsigned char ciphertext[sizeof(msg) + crypto_aead_chacha20poly1305_ABYTES];
-	uint64_t ciphertext_len;
+	unsigned long long ciphertext_len;
 
 	unsigned char nonce[crypto_aead_chacha20poly1305_ietf_NPUBBYTES];
 	randombytes_buf(nonce, sizeof(nonce));
 
 	crypto_aead_chacha20poly1305_ietf_encrypt(ciphertext, &ciphertext_len, msg, sizeof(msg), NULL, 0, NULL, nonce, key);
 
-	size_t total_len = sizeof(ciphertext_len) + sizeof(salt) + sizeof(nonce) + ciphertext_len;
+	uint64_t clen = ciphertext_len;
+	size_t total_len = sizeof(clen) + sizeof(salt) + sizeof(nonce) + clen;
 	unsigned char* en_msg = malloc(total_len);
 
 	size_t i = 0;
-	memcpy(en_msg + i, &ciphertext_len, sizeof(ciphertext_len));
-	i += sizeof(ciphertext_len);
+	memcpy(en_msg + i, &clen, sizeof(ciphertext_len));
+	i += sizeof(clen);
 	memcpy(en_msg + i, salt, sizeof(salt));
 	i += sizeof(salt);
 	memcpy(en_msg + i, nonce, sizeof(nonce));
 	i += sizeof(nonce);
-	memcpy(en_msg + i, ciphertext, ciphertext_len);
+	memcpy(en_msg + i, ciphertext, clen);
 
 	*out_len = total_len;
 	return en_msg;
