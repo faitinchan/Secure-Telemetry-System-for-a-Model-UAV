@@ -183,13 +183,13 @@ unsigned char* encrypt_msg(char* pwd, char* msg, size_t* out_len) {
 		return NULL;
 	}
 
-	unsigned char ciphertext[sizeof(msg) + crypto_aead_chacha20poly1305_ABYTES];
+	unsigned char ciphertext[strlen(msg) + crypto_aead_chacha20poly1305_ABYTES];
 	unsigned long long ciphertext_len;
 
 	unsigned char nonce[crypto_aead_chacha20poly1305_ietf_NPUBBYTES];
 	randombytes_buf(nonce, sizeof(nonce));
 
-	crypto_aead_chacha20poly1305_ietf_encrypt(ciphertext, &ciphertext_len, msg, sizeof(msg), NULL, 0, NULL, nonce, key);
+	crypto_aead_chacha20poly1305_ietf_encrypt(ciphertext, &ciphertext_len, msg, strlen(msg), NULL, 0, NULL, nonce, key);
 
 	uint64_t clen = ciphertext_len;
 	size_t total_len = sizeof(clen) + sizeof(salt) + sizeof(nonce) + clen;
