@@ -11,3 +11,4 @@ YouTube Video:
 Dowload:
 - Raw code: [messenger.c](https://github.com/faitinchan/Secure-Telemetry-System-for-a-Model-UAV/blob/main/Side%20Quest%201/messenger.c)
 - Compiled: [messenger](https://github.com/faitinchan/Secure-Telemetry-System-for-a-Model-UAV/blob/main/Side%20Quest%201/messenger)
+###### Remark: libsodium needed to be installed to compile the raw code and run the above compiled program
