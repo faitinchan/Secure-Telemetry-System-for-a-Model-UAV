@@ -10,17 +10,18 @@
 #define MAX_PASSWORD_LEN 64
 #define MAX_MSG_LEN 1024
 
-void run_listener();
+void run_listener(char* pwd);
 void run_sender(char* dest_ip, unsigned char* en_msg, size_t total_len);
 char* get_password();
 unsigned char* encrypt_msg(char* pwd, char* msg, size_t* out_len);
+void decrypt_msg(char* pwd, unsigned char* buffer, char* de_msg);
 
 int main(int argc, char* argv[]) {
 	if (argc == 1) {
 		char* password = get_password();
 
 		printf("[*] Listening for messages...\n");
-		run_listener();
+		run_listener(password);
 
 		free(password);
 	} else if (argc == 3) {
@@ -51,7 +52,7 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
-void run_listener() {
+void run_listener(char* pwd) {
 	int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (sockfd < 0) {
 		printf("Socket creation failed\n");
@@ -73,7 +74,7 @@ void run_listener() {
 	printf("[*] Listening on port 12345...\n");
 
 	struct sockaddr_in sender_addr;
-	char buffer[MAX_MSG_LEN + 1];
+	char buffer[sizeof(uint64_t) + crypto_pwhash_SALTBYTES + crypto_aead_chacha20poly1305_ietf_NPUBBYTES + MAX_MSG_LEN + crypto_aead_chacha20poly1305_ABYTES];
 	socklen_t sender_len = sizeof(sender_addr);
 	while (1) {
 		ssize_t recv_len = recvfrom(sockfd, buffer, sizeof(buffer) - 1, 0, (struct sockaddr*)&sender_addr, &sender_len);
@@ -82,12 +83,14 @@ void run_listener() {
 			break;
 		}	
 
-		buffer[recv_len] = '\0';
+		char de_msg[MAX_MSG_LEN + 1];
+
+		decrypt_msg(pwd, (unsigned char*)buffer, de_msg);
 
 		char sender_ip[INET_ADDRSTRLEN];
 		inet_ntop(AF_INET, &(sender_addr.sin_addr), sender_ip, INET_ADDRSTRLEN);
 
-		printf("[+] Received from %s: \"%s\"\n", sender_ip, buffer);
+		printf("[+] Received from %s: \"%s\"\n", sender_ip, de_msg);
 	}
 
 	close(sockfd);
@@ -206,4 +209,42 @@ unsigned char* encrypt_msg(char* pwd, char* msg, size_t* out_len) {
 
 	*out_len = total_len;
 	return en_msg;
+}
+
+void decrypt_msg(char* pwd, unsigned char* buffer, char* de_msg) {
+	if (sodium_init() < 0) {
+		printf("Fail to initialize libsodium.\n");
+		return;
+	}
+
+	uint64_t clen;
+	unsigned char salt[crypto_pwhash_SALTBYTES];
+	unsigned char nonce[crypto_aead_chacha20poly1305_ietf_NPUBBYTES];
+
+	size_t i = 0;
+	memcpy(&clen, buffer + i, sizeof(clen));
+	i += sizeof(clen);
+	memcpy(salt, buffer + i, sizeof(salt));
+	i += sizeof(salt);
+	memcpy(nonce, buffer + i, sizeof(nonce));
+	i += sizeof(nonce);
+
+	unsigned char ciphertext[clen];
+	memcpy(ciphertext, buffer + i, clen);
+
+	unsigned char key[crypto_aead_chacha20poly1305_KEYBYTES];
+	if (crypto_pwhash(key, sizeof(key), pwd, strlen(pwd), salt, crypto_pwhash_OPSLIMIT_INTERACTIVE, crypto_pwhash_MEMLIMIT_INTERACTIVE, crypto_pwhash_ALG_DEFAULT) != 0) {
+		printf("Out of memory while hashing password.\n");
+		return;
+	}
+
+	unsigned long long ciphertext_len = clen;
+	unsigned long long decrypted_len;
+
+	if (crypto_aead_chacha20poly1305_ietf_decrypt(de_msg, &decrypted_len, NULL, ciphertext, ciphertext_len, NULL, 0, nonce, key)) {
+		printf("Decryption failed (forged or corrupted data).\n");
+		return;
+	}
+
+	de_msg[decrypted_len] = '\0';
 }
