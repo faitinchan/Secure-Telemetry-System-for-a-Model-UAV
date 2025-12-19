@@ -8,6 +8,7 @@ YouTube Video:
 - Part 4: [Testing](https://youtu.be/IjyIfoXUDcU)
 - Part 5: [Get Password](https://youtu.be/1bBXb8ZaESQ)
 - Part 6: [Encryption](https://youtu.be/2uZwoyg_Gbw)
+- Part 7: [Decryption](https://youtu.be/n0nqpjOKlBo)
 
 Dowload:
 - Raw code: [messenger.c](https://github.com/faitinchan/Secure-Telemetry-System-for-a-Model-UAV/blob/main/Side%20Quest%201/messenger.c)
